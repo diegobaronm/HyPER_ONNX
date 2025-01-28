@@ -186,7 +186,9 @@ class HyPERModel(LightningModule):
                  batch_size=len(val_batch), on_step=True, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('fuzzy_accuracy/validation_accuracy_hyperedge', accuracy_hyperedge, batch_size=len(val_batch), on_step=True, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
 
+    @torch.no_grad()
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        self.eval()
         x_hat, batch_hyperedge, edge_attr_prime = self._shared_step(batch)
 
         # Unbatch results
