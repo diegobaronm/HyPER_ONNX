@@ -1,5 +1,6 @@
 from torch import Tensor
 from torch_geometric.utils import scatter
+from HyPER.utils.custom_scatter import custom_scatter
 
 from .custom_scatter import custom_scatter
 

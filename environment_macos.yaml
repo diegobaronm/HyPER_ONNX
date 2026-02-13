@@ -24,3 +24,4 @@ dependencies:
     - onnx
     - onnxruntime==1.18
     - onnxscript
+    - vector

@@ -2,6 +2,7 @@ import torch
 
 from torch.nn import Module, Sequential as Seq, Linear, ReLU, Dropout
 from torch_geometric.utils import scatter
+from HyPER.utils.custom_scatter import custom_scatter
 
 from ..utils import custom_scatter
 

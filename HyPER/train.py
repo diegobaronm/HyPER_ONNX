@@ -33,15 +33,13 @@ def Train(cfg : DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
 
     datamodule = HyPERDataModule(
-        db_config = cfg['db_config'],
+        root = cfg['dataset'],
         train_set = cfg['train_set'],
         val_set = cfg['val_set'],
         batch_size = cfg['batch_size'],
         max_n_events = cfg['max_n_events'],
         percent_valid_samples = 1 - float(cfg['train_val_split']),
-        num_workers = cfg['num_workers'],
         pin_memory = True if cfg['device'] == "gpu" else False,
-        all_matched = cfg['all_matched'],
         drop_last = cfg['drop_last']
     )
 
@@ -59,20 +57,21 @@ def Train(cfg : DictConfig) -> None:
         optimizer = cfg['optimizer'],
         lr = cfg['learning_rate'],
         alpha = cfg['alpha'],
+        beta = cfg['beta'],
         reduction = cfg['loss_reduction']
     )
 
     callbacks = [
         ModelCheckpoint(
             verbose=True,
-            monitor="fuzzy_accuracy/validation_accuracy_hyperedge",
+            monitor="loss/validation_loss",
             save_top_k=1,
-            mode="max",
+            mode="min",
             save_last=True
         ),
         EarlyStopping(
-            monitor="fuzzy_accuracy/validation_accuracy_hyperedge",
-            mode="max",
+            monitor="loss/validation_loss",
+            mode="min",
             min_delta=0.00,
             patience=cfg['patience'],
             verbose=False
@@ -88,13 +87,24 @@ def Train(cfg : DictConfig) -> None:
         devices = cfg['num_devices'],
         max_epochs = cfg['epochs'],
         callbacks = callbacks,
-        logger = TensorBoardLogger(save_dir=cfg['savedir'], name="", log_graph=True)
+        logger = TensorBoardLogger(save_dir=cfg['savedir'], name="", log_graph=True),
     )
 
-    if cfg['continue_from_ckpt'] is not None:
-        print("Resume training state from %s"%(cfg['continue_from_ckpt']))
+    if cfg['continue_from_ckpt'] is not None and cfg['reset_params'] is True:
+        print("Resume training state from %s, using new hyperparameters"%(cfg['continue_from_ckpt']))
 
-    trainer.fit(model, datamodule=datamodule, ckpt_path=cfg['continue_from_ckpt'])
+        ckpt = torch.load(cfg['continue_from_ckpt'], map_location='cpu')
+        model.load_state_dict(ckpt['state_dict'], strict=True)
+
+        trainer.fit(model, datamodule=datamodule)
+
+    elif cfg['continue_from_ckpt'] is not None:
+        print("Resume training from %s"%(cfg['continue_from_ckpt']))
+
+        trainer.fit(model, datamodule=datamodule, ckpt_path=cfg['continue_from_ckpt'])
+    
+    else:
+        trainer.fit(model, datamodule=datamodule)
 
 
 if __name__ == '__main__':

@@ -65,7 +65,7 @@ def Onnx(cfg : DictConfig) -> None:
                         'batch'             : {0 : Dim.DYNAMIC},
                         'edge_index_h'      : {1 : Dim.DYNAMIC},
                         'batch_hyperedge': {0 : Dim.DYNAMIC}},
-        output_names = ['hyperedge_prime','batch_hyperedge','edge_prime'],
+        output_names = ['hyperedge_prime','batch_hyperedge','edge_prime','classification_score'],
     )
     
     onnx_program.optimize()
